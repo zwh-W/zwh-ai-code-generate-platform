@@ -799,7 +799,7 @@ SOFTWARE.
 **后端开发工程师 | AI 应用开发**
 
 [![GitHub](https://img.shields.io/badge/GitHub-zwh--W-black?logo=github)](https://github.com/zwh-W)
-[![Email](https://img.shields.io/badge/Email-your--email%40example.com-blue?logo=gmail)](mailto:your-email@example.com)
+[![Email](https://img.shields.io/badge/Email-1840816813%40qq.com-blue?logo=gmail)](mailto:your-email@example.com)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-张蘶豪-blue?logo=linkedin)](https://linkedin.com/in/your-profile)
 
 **专业技能**: Spring Boot | Vue.js | AI/ML | 系统架构设计  
@@ -817,7 +817,7 @@ SOFTWARE.
 ### 联系方式
 
 - **技术交流**: 欢迎通过 GitHub Issues 讨论技术问题
-- **商业合作**: 请发送邮件至 your-email@example.com
+- **商业合作**: 请发送邮件至 1840816813@qq.com
 - **项目咨询**: 提供项目定制开发和技术咨询服务
 
 ---
