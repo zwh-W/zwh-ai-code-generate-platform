@@ -126,7 +126,7 @@ UI & 交互:
 
 ### 整体架构图
 
-```
+```mermaid
 graph LR
   %% ===== 客户端层 =====
   subgraph CLIENTS["客户端层"]
