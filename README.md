@@ -11,7 +11,7 @@
 
 **基于 Spring Boot 3 + LangChain4j + Vue 3 的企业级 AI 代码生成平台**
 
-[在线演示](https://demo.zwh-ai-platform.com) | [API 文档](https://docs.zwh-ai-platform.com) | [部署指南](#-快速开始)
+
 
 </div>
 
