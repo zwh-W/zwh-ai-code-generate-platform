@@ -127,49 +127,193 @@ UI & 交互:
 ### 整体架构图
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        ZWH AI 代码生成平台                          │
-├─────────────────┬─────────────────┬─────────────────┬─────────────────┤
-│   用户交互层     │    API 网关层    │   AI 服务层      │   工作流引擎     │
-│                │                 │                │                │
-│  Vue 3 前端     │  Spring Boot    │  LangChain4j   │  LangGraph4j    │
-│  ├ 代码编辑器   │  ├ 接口路由     │  ├ GPT-4       │  ├ 任务编排     │
-│  ├ 实时预览     │  ├ 权限验证     │  ├ Claude      │  ├ 状态管理     │
-│  ├ 项目管理     │  ├ 限流控制     │  ├ 本地 LLM    │  ├ 并发处理     │
-│  └ 监控面板     │  └ 日志记录     │  └ 提示词管理   │  └ 错误恢复     │
-└─────────────────┼─────────────────┼─────────────────┼─────────────────┤
-                 │                 │                │                │
-┌─────────────────┼─────────────────┼─────────────────┼─────────────────┤
-│   数据存储层     │   缓存层        │   消息队列       │   基础设施层     │
-│                │                 │                │                │
-│  MySQL 8.0      │  Redis 7.0      │  RabbitMQ      │  Docker + K8s   │
-│  ├ 用户数据     │  ├ 会话缓存     │  ├ 异步任务     │  ├ 容器编排     │
-│  ├ 项目信息     │  ├ 生成缓存     │  ├ 消息通知     │  ├ 服务发现     │
-│  ├ 代码模板     │  ├ 分布式锁     │  └ 事件驱动     │  ├ 负载均衡     │
-│  └ 审计日志     │  └ 限流计数     │                │  └ 健康检查     │
-└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+graph LR
+  %% ===== 客户端层 =====
+  subgraph CLIENTS["客户端层"]
+    direction LR
+    C1["前端浏览器"]
+    C2["服务器"]
+    C3["小程序"]
+    C4["桌面 APP"]
+  end
+
+  %% ===== 网关层 =====
+  subgraph GATEWAY["网关层"]
+    direction LR
+    G1["Higress 网关"]
+    G2["Tomcat 应用服务器"]
+    G3["Nginx"]
+  end
+
+  %% ===== 业务层 =====
+  subgraph BIZ["业务层"]
+    direction TB
+    BI1["AI 服务"]
+    BI2["应用服务"]
+    BI3["对话历史服务"]
+    BI4["用户服务"]
+    BI5["AI Tools<br/>(文件 / 图片 操作等)"]
+    BI6["LangChain4j / LangGraph4j"]
+    BI7["AI 大模型<br/>(通义, DeepSeek)"]
+    BI8["消息流处理器"]
+    BI9["对象存储服务"]
+    BI10["截图 / 封面生成服务"]
+    BI11["项目构建器 / 代码下载"]
+    BI12["代码解析器"]
+    BI13["文件保存器"]
+  end
+
+  %% ===== 服务治理 & 监控（侧边） =====
+  subgraph GOVMON["服务治理 & 监控"]
+    direction TB
+    SM["服务监控总览"]
+    ARMS["ARMS 系统监控"]
+    PROM["Prometheus 自定义监控"]
+    GRAF["Grafana 可视化"]
+    SG["服务治理总览"]
+    NACOS["Nacos 服务注册"]
+    DUBBO["Dubbo RPC 服务调用"]
+    FLOWCTRL["流量控制 / 熔断限流"]
+  end
+
+  %% ===== 存储层 =====
+  subgraph STORAGE["存储层"]
+    direction LR
+    DB["MySQL"]
+    REDIS["Redis"]
+    COS["对象存储 (COS)"]
+    LOCAL["本地存储"]
+  end
+
+  %% ===== 基础设施层 =====
+  subgraph INFRA["基础设施层"]
+    direction LR
+    NET["网络"]
+    DOCKER["Docker"]
+    LINUX["Linux 服务器"]
+    MEM["内存"]
+    DISK["硬盘存储"]
+  end
+
+  %% ===== 层间连接 =====
+  C1 --> G1
+  C2 --> G1
+  C3 --> G1
+  C4 --> G1
+
+  G1 --> G2
+  G1 --> G3
+
+  G2 --> BI1
+  G2 --> BI2
+  G2 --> BI3
+  G2 --> BI4
+
+  %% 业务依赖
+  BI1 --> BI7
+  BI1 --> REDIS
+  BI2 --> BI11
+  BI2 --> BI12
+  BI2 --> BI13
+  BI2 --> BI9
+  BI3 --> BI8
+  BI4 --> DB
+
+  BI11 --> LOCAL
+  BI9 --> COS
+
+  %% 存储连接
+  BI1 --> DB
+  BI2 --> DB
+  BI3 --> DB
+  BI2 --> REDIS
+
+  %% 服务治理 & 监控 连接到服务层
+  ARMS --> SM
+  PROM --> SM
+  GRAF --> SM
+  NACOS --> SG
+  DUBBO --> SG
+  FLOWCTRL --> SG
+
+  BI1 --> SM
+  BI2 --> SM
+  BI3 --> SM
+  BI4 --> SM
+
+  BI1 --> SG
+  BI2 --> SG
+
+  %% 存储与基础设施依赖
+  DB --> DISK
+  REDIS --> DISK
+  COS --> NET
+  LOCAL --> DISK
+
+  %% 基础设施关系
+  DOCKER --> LINUX
+  DISK --> LINUX
+  NET --> LINUX
+
+  %% ===== 节点样式（按层配色） =====
+  classDef client fill:#D9F2FF,stroke:#2B79D9,stroke-width:1px;
+  classDef gateway fill:#FFF2D9,stroke:#E39B2E,stroke-width:1px;
+  classDef biz fill:#EAF9EA,stroke:#2FA85A,stroke-width:1px;
+  classDef gov fill:#FFE6EE,stroke:#E85C89,stroke-width:1px;
+  classDef storage fill:#FFF5E6,stroke:#E38B2B,stroke-width:1px;
+  classDef infra fill:#F3F6F9,stroke:#5A6B78,stroke-width:1px;
+
+  class C1,C2,C3,C4 client;
+  class G1,G2,G3 gateway;
+  class BI1,BI2,BI3,BI4,BI5,BI6,BI7,BI8,BI9,BI10,BI11,BI12,BI13 biz;
+  class SM,ARMS,PROM,GRAF,SG,NACOS,DUBBO,FLOWCTRL gov;
+  class DB,REDIS,COS,LOCAL storage;
+  class NET,DOCKER,LINUX,MEM,DISK infra;
+
 ```
 
 ### 核心流程
 
 ```mermaid
-sequenceDiagram
-    participant U as 用户
-    participant F as 前端界面
-    participant A as API网关
-    participant AI as AI服务
-    participant W as 工作流引擎
-    participant D as 数据库
+flowchart TD
+  A["用户注册/登录"]
+  B["输入提示词创建应用"]
+  C["AI 智能选择代码生成类型"]
+  D["AI 调用工具生成代码<br/>(流式输出过程)"]
+  E["预览生成的网站"]
+  F{"是否需要修改？"}
+  G["可视化编辑或继续对话"]
+  H["AI 调用工具修改代码"]
+  I["部署应用获得链接"]
+  J["自动截图生成封面"]
+  K["下载项目代码"]
+  L["用户可重新进入应用"]
+  M["加载对话历史并恢复上下文"]
 
-    U->>F: 输入代码需求
-    F->>A: 提交生成请求
-    A->>A: 权限验证 & 限流检查
-    A->>AI: 调用AI分析服务
-    AI->>W: 创建生成工作流
-    W->>W: 并发执行生成任务
-    W->>D: 保存生成结果
-    W->>F: 流式返回进度
-    F->>U: 实时展示生成过程
+  %% 主流程
+  A --> B --> C --> D --> E
+  E --> F
+
+  %% 修改分支（循环）
+  F -- 需要修改 --> G --> H --> D
+
+  %% 满意分支（部署流程）
+  F -- 满意 --> I --> J --> K --> L --> M
+
+  %% 最后回到预览（加载对话后可以再次预览）
+  M --> E
+
+  %% 样式
+  classDef step fill:#E6F2FF,stroke:#2B6CB0,stroke-width:1px;
+  classDef ai fill:#F3E8FF,stroke:#7C3AED,stroke-width:1px;
+  classDef decision fill:#FFF4E6,stroke:#F59E0B,stroke-width:2px;
+  classDef deploy fill:#ECFDF5,stroke:#10B981,stroke-width:1px;
+
+  class A,B,E,K,L step;
+  class C,D,H ai;
+  class F decision;
+  class I,J deploy;
+
 ```
 
 ---
@@ -180,7 +324,7 @@ sequenceDiagram
 
 | 组件 | 版本要求 | 说明 |
 |------|----------|------|
-| JDK | 17+ | 推荐 OpenJDK 17 |
+| JDK | 21+ | 推荐 OpenJDK 21 |
 | Maven | 3.8+ | 构建工具 |
 | MySQL | 8.0+ | 主数据库 |
 | Redis | 6.0+ | 缓存和会话存储 |
@@ -251,21 +395,21 @@ docker-compose logs -f app
 
 访问以下地址验证部署成功：
 
-- **前端界面**: http://localhost:3000
-- **后端API**: http://localhost:8080
-- **API文档**: http://localhost:8080/doc.html
-- **健康检查**: http://localhost:8080/actuator/health
+
+- **后端API**: http://localhost:8123
+- **API文档**: http://localhost:8123/doc.html
+- **健康检查**: http://localhost:8123/actuator/health
 
 ### API 调用示例
 
 ```bash
 # 1. 用户登录
-curl -X POST http://localhost:8080/api/user/login \
+curl -X POST http://localhost:8123/api/user/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 
 # 2. 生成 Spring Boot CRUD 代码
-curl -X POST http://localhost:8080/api/generate/code \
+curl -X POST http://localhost:8123/api/generate/code \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{
@@ -276,7 +420,7 @@ curl -X POST http://localhost:8080/api/generate/code \
   }'
 
 # 3. 生成 Vue 3 组件
-curl -X POST http://localhost:8080/api/generate/frontend \
+curl -X POST http://localhost:8123/api/generate/frontend \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{
@@ -486,11 +630,11 @@ app:
 ### 常见部署问题
 
 #### 1. 端口冲突
-**问题**: `Port 8080 already in use`
+**问题**: `Port 8123 already in use`
 **解决方案**:
 ```bash
 # 查找占用进程
-lsof -i :8080
+lsof -i :8123
 # 或修改配置文件中的端口
 server:
   port: 8081
